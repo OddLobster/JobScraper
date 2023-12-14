@@ -11,7 +11,6 @@ from selectolax.parser import HTMLParser
 from jobDB import JobDB
 
 database = JobDB()
-encoder = hashlib.sha256()
 
 
 @dataclass
@@ -61,6 +60,7 @@ def get_page(client, url, page):
 def process_job_list(job_list, jobs):
     job_temp = []
     for job in job_list:
+        encoder = hashlib.sha256()
         try:
             job = job["jobsItem"]
         except Exception:
@@ -116,7 +116,7 @@ def crawl_pages(jobs, num_pages, url):
 
 def main():
     url = "https://www.karriere.at"
-    num_pages = 20  # 500 max
+    num_pages = 500  # 500 max
     jobs: list[JobPosting] = []
     crawl_pages(jobs, num_pages, url)
 
