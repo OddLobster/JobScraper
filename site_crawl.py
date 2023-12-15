@@ -4,13 +4,16 @@ import json
 import random
 import time
 from dataclasses import dataclass
-
 import httpx
 from selectolax.parser import HTMLParser
-
 from jobDB import JobDB
+import threading
 
+lock = threading.Lock()
 database = JobDB()
+
+BATCH_SIZE = 100
+NUM_PAGES = 500  # 500 max
 
 
 @dataclass
@@ -52,20 +55,24 @@ def get_page(client, url, page):
         "x-requested-with": "XMLHttpRequest",
     }
     response = client.get(url + page, headers=headers)
+    if response.status_code != 200:
+        print("Bad Response:", response.status_code)
+        return -1
     html = response.text
     parser = HTMLParser(html)
     return parser
 
 
-def process_job_list(job_list, jobs):
+def process_job_list(job_list):
     job_temp = []
     for job in job_list:
-        encoder = hashlib.sha256()
         try:
             job = job["jobsItem"]
         except Exception:
             print("Not a job posting")
             continue
+        encoder = hashlib.sha256()
+
         date = datetime.datetime.strptime(job["date"].replace("am ", ""), "%d.%m.%Y")
         encoder.update((job["title"] + job["snippet"] + job["locations"][0]["slug"] + str(date)).encode("utf-8"))
         item = JobPosting(
@@ -87,43 +94,58 @@ def process_job_list(job_list, jobs):
             updated_at = datetime.datetime.now()
         )
 
-        jobs.append(item)
         job_temp.append(item)
     return job_temp
 
 
 def write_to_db(jobs):
+    lock.acquire()
     database.insert_jobs(jobs)
+    lock.release()
 
-
-def crawl_pages(jobs, num_pages, url):
+def crawl_pages(num_pages, url):
     with httpx.Client(base_url="https://www.karriere.at") as client:
-        for page_nr in range(1, num_pages + 1):
+        for page_nr in range(num_pages, num_pages + BATCH_SIZE):
             page = f"/jobs?page={page_nr}"
-            json_data = json.loads(get_page(client, url, page).text())
-
-            # with open("data.json", "w") as file:
-            #     json.dump(json_data, file)
+            page_data = get_page(client, url, page)
+            if page_data == -1:
+                print(f"Failed to load {page}")
+                continue
+            json_data = json.loads(page_data.text())
 
             job_list = json_data["data"]["jobsSearchList"]["activeItems"]["items"]
-            jobs_from_page = process_job_list(job_list, jobs)
+            jobs_from_page = process_job_list(job_list)
 
             write_to_db(jobs_from_page)
 
             time.sleep(random.uniform(0.5, 3.5))  # trunk-ignore(bandit/B311)
-            print(f"Crawled {page_nr} pages")
-
+            print(f"Thread {num_pages//BATCH_SIZE} Crawled {page_nr - num_pages} pages")
+        
 
 def main():
-    url = "https://www.karriere.at"
-    num_pages = 500  # 500 max
-    jobs: list[JobPosting] = []
-    crawl_pages(jobs, num_pages, url)
+    num_docs = JobDB().get_num_documents()
+    print(f"Total number of documents: {num_docs}")
 
+    num_threads = (NUM_PAGES // BATCH_SIZE) + 1
+    print(f"Launching {num_threads} threads")
+    threads = []
+
+    url = "https://www.karriere.at"
+
+    for thread_id in range(num_threads):
+        thread = threading.Thread(target=crawl_pages, args=(thread_id*BATCH_SIZE, url))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    num_docs_after = JobDB().get_num_documents()
+    print(f"Number of documents added: {num_docs_after - num_docs}")
 
 if __name__ == "__main__":
     main()
 
-# rapidapi.com rapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.com
-# rapidapi.com rapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.com
-# rapidapi.com rapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.comrapidapi.com
+# rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com 
+# rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com 
+# rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com rapidapi.com 
