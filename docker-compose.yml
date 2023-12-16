@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  mongo-db:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - crawl_network
+
+  site_crawl:
+    build:
+      context: ./crawl_pages
+    depends_on:
+      - mongo-db
+    networks:
+      - crawl_network
+
+  page_crawl:
+    build:
+      context: ./update_pages
+    depends_on:
+      - mongo-db
+    networks:
+      - crawl_network
+
+networks:
+  crawl_network:
+    driver: bridge
+
+volumes:
+  mongodata:
