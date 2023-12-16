@@ -12,7 +12,7 @@ import threading
 lock = threading.Lock()
 database = JobDB()
 
-BATCH_SIZE = 100
+BATCH_SIZE = 50
 NUM_PAGES = 500  # 500 max
 
 
@@ -24,6 +24,7 @@ class JobPosting:
     salary: str
     company_url: str
     location: str
+    country: str
     url: str
     description_snippet: str
     full_description: str
@@ -82,6 +83,7 @@ def process_job_list(job_list):
             company_url=job["company"]["link"],
             company_id=job["companyId"],
             location=job["locations"][0]["slug"],
+            country="Austria",  #TODO currently hardcoded
             url=job["link"],
             description_snippet=job["snippet"],
             full_description="",
@@ -126,7 +128,7 @@ def main():
     num_docs = JobDB().get_num_documents()
     print(f"Total number of documents: {num_docs}")
 
-    num_threads = (NUM_PAGES // BATCH_SIZE) + 1
+    num_threads = (NUM_PAGES // BATCH_SIZE)
     print(f"Launching {num_threads} threads")
     threads = []
 

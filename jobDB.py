@@ -4,7 +4,7 @@ class JobDB:
     def __init__(self) -> None:
         self.client = MongoClient('mongodb://localhost:27017/')
         self.db = self.client['JobPostings']
-        self.collection = self.db['karriereAT1']
+        self.collection = self.db['karriereAT2']
 
     def insert_jobs(self, jobs):
         job_data = [job.__dict__ for job in jobs]
