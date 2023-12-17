@@ -1,21 +1,16 @@
 # Use an official Python runtime as a parent image
-FROM python:3.8-slim
+FROM python:3.8
 
-RUN apt-get update && \
-    apt-get install -y wget unzip
+# Install necessary dependencies
+RUN pip install selenium
 
-# Set ChromeDriver version
-ENV CHROMEDRIVER_VERSION 94.0.4606.61
+# Download and install Chrome and ChromeDriver
+RUN apt-get update -qqy \
+    && apt-get -qqy install wget unzip \
+    && apt-get -qqy install chromium-driver \
+    && apt-get -qqy install chromium \
+    && rm -rf /var/lib/apt/lists/*
 
-# Download and install ChromeDriver
-RUN wget -q -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip && \
-    unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
-    rm /tmp/chromedriver.zip && \
-    chmod +x /usr/local/bin/chromedriver
-
-RUN wget -q -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    dpkg -i /tmp/google-chrome.deb || apt-get install -f -y && \
-    rm /tmp/google-chrome.deb
 
 
 # Set the working directory in the container
@@ -23,6 +18,7 @@ WORKDIR /app
 
 # Copy the current directory contents into the container at /app
 COPY . /app
+
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
@@ -36,4 +32,4 @@ EXPOSE 80
 ENV NAME World
 
 # Run app.py when the container launches
-CMD ["python", "page_crawl.py"]
+CMD ["python3", "page_crawl.py"]

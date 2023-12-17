@@ -41,13 +41,16 @@ def crawl_pages(skip_to, NUM_URLS=100):
     urls = job_db.get_items_to_update(skip=skip_to, num_urls=NUM_URLS)
 
     options = Options()
-    # options.add_argument("start-maximized")
-    options.add_argument("--headless")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_argument('--ignore-certificate-errors')
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+    options.add_argument('--headless')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--remote-debugging-port=9222')  # Optional: Enables remote debugging
+    options.binary_location = "/usr/bin/chromium"
+
+    driver = webdriver.Chrome(options=options)
+
 
     with httpx.Client(base_url="https://www.karriere.at") as client:
         for data in urls:
