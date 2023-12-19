@@ -86,7 +86,7 @@ def process_job_list(job_list):
         item = JobPosting(
             title=job["title"],
             company=job["company"]["slug"],
-            salary=job["salary"],
+            salary="-1",#job["salary"],
             company_url=job["company"]["link"],
             company_id=job["companyId"],
             location=job["locations"][0]["slug"],

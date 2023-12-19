@@ -16,11 +16,12 @@ TOTAL_NUM_URLS = JobDB().get_num_documents()
 BATCH_SIZE = 250
 
 selectors = {
-    "selenium-description": ["body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone"],
+    "selenium-description": ["body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone"],
     "regular-description": ["body > div > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "#k2-template > div > div.content"]
 }
 
 def get_description(selectors, parser):
+    # TODO fix: dirty solution
     def try_get_description(selector):
         try:
             description = parser.css(selector)[0].text()
