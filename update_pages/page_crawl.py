@@ -5,15 +5,14 @@ from selectolax.parser import HTMLParser
 import threading
 import time
 import random
-import hashlib
+# import hashlib
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 
 database = JobDB()
 
 TOTAL_NUM_URLS = JobDB().get_num_documents()
-BATCH_SIZE = 250
+BATCH_SIZE = 1000
 
 selectors = {
     "selenium-description": ["body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone", "body > div.l-master > div.l-master__content > div > div > div > div.m-jobContent > div.m-jobContent__jobDetail > div.m-jobContent__jobText.m-jobContent__jobText--standalone"],
@@ -41,16 +40,7 @@ def crawl_pages(skip_to, NUM_URLS=100):
     job_db = JobDB()
     urls = job_db.get_items_to_update(skip=skip_to, num_urls=NUM_URLS)
 
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--disable-extensions')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--remote-debugging-port=9222')  # Optional: Enables remote debugging
-    options.binary_location = "/usr/bin/chromium"
 
-    driver = webdriver.Chrome(options=options)
 
 
     with httpx.Client(base_url="https://www.karriere.at") as client:
@@ -62,6 +52,17 @@ def crawl_pages(skip_to, NUM_URLS=100):
                 continue
 
             elif response.status_code == 500:
+
+                options = Options()
+                options.add_argument('--headless')
+                options.add_argument('--disable-extensions')
+                options.add_argument('--disable-gpu')
+                options.add_argument('--no-sandbox')
+                options.add_argument('--disable-dev-shm-usage')
+                options.add_argument('--remote-debugging-port=9222')  # Optional: Enables remote debugging
+                options.binary_location = "/usr/bin/chromium"
+
+                driver = webdriver.Chrome(options=options)
                 print(f"load with selenium {data[1]}")
 
                 driver.get(data[1])

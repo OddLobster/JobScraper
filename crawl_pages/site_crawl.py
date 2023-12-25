@@ -57,7 +57,7 @@ def get_page(client, url, page):
     }
     
     try:
-        response = client.get(url + page, headers=headers)
+        response = client.get(url + page, headers=headers, timeout=30)
     except Exception as e:
         print("Connection probably timed out!\n", e)
         return -1
@@ -94,7 +94,7 @@ def process_job_list(job_list):
             url=job["link"],
             description_snippet=job["snippet"],
             full_description="",
-            employment_type=job["employmentTypes"],
+            employment_type="-1", #job["employmentTypes"],
             posted_at=date,
             is_active=True,
             last_active=datetime.datetime(1, 1, 1, 1, 1, 1),
